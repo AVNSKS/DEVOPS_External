@@ -74,7 +74,12 @@ spec:
             steps {
                 dir('ingestion-service') {
                     echo 'Downloading kubectl utility dynamically...'
-                    sh 'curl --fail --location --output kubectl https://dl.k8s.io/release/v1.35.5/bin/linux/amd64/kubectl'
+                    sh '''
+                    curl --fail --location --http1.1 \
+                      --retry 5 --retry-delay 2 --retry-all-errors \
+                      --output kubectl \
+                      https://dl.k8s.io/release/v1.35.5/bin/linux/amd64/kubectl
+                    '''
                     sh 'chmod +x kubectl'
 
                     echo 'Rolling out updated manifest to worker architecture...'
