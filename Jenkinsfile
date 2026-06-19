@@ -1,8 +1,30 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: jnlp
+    image: jenkins/inbound-agent:3355.v388858a_47b_33-22
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-sock
+    - mountPath: /usr/bin/docker
+      name: docker-cli
+  volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
+  - name: docker-cli
+    hostPath:
+      path: /usr/bin/docker
+'''
+        }
+    }
 
     environment {
-        // Replace with your actual Docker Hub username
         DOCKER_HUB_USER = 'sivaanumual'
         IMAGE_NAME      = 'agronet-ingestion'
         IMAGE_TAG       = 'v1'
@@ -12,7 +34,6 @@ pipeline {
         stage('Checkout Source Code') {
             steps {
                 echo 'Pulling latest code changes from Git repository...'
-                // Code is automatically fetched by Jenkins from your repository mapping
             }
         }
 
@@ -26,7 +47,6 @@ pipeline {
         stage('Push to Docker Hub Registry') {
             steps {
                 echo 'Syncing image with centralized registry pool...'
-                // Jenkins uses local terminal Docker login context
                 sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
