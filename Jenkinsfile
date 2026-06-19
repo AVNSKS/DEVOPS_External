@@ -32,7 +32,7 @@ spec:
     }
 
     environment {
-        DOCKER_HUB_USER = 'sivaanumuala'
+        DOCKER_HUB_USER = 'sivaanumula'
         IMAGE_NAME      = 'agronet-ingestion'
         IMAGE_TAG       = 'v1'
     }
