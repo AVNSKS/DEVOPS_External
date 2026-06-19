@@ -37,7 +37,16 @@ spec:
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-vault-token', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
                             sh """
                             mkdir -p /kaniko/.docker
-                            echo '{"auths":{"[https://index.docker.io/v1/](https://index.docker.io/v1/)":{"username":"\\${DH_USER}","password":"\\${DH_PASS}"}}}' > /kaniko/.docker/config.json
+                            cat <<EOF > /kaniko/.docker/config.json
+                            {
+                              "auths": {
+                                "[https://index.docker.io/v1/](https://index.docker.io/v1/)": {
+                                  "username": "${DH_USER}",
+                                  "password": "${DH_PASS}"
+                                }
+                              }
+                            }
+                            EOF
                             /kaniko/executor --context=. --dockerfile=Dockerfile --destination=${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
                             """
                         }
