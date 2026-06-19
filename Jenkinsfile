@@ -40,7 +40,7 @@ spec:
                             cat <<EOF > /kaniko/.docker/config.json
                             {
                               "auths": {
-                                "[https://index.docker.io/v1/](https://index.docker.io/v1/)": {
+                                                                "https://index.docker.io/v1/": {
                                   "username": "${DH_USER}",
                                   "password": "${DH_PASS}"
                                 }
@@ -59,7 +59,7 @@ spec:
             steps {
                 dir('ingestion-service') {
                     echo 'Downloading kubectl utility dynamically...'
-                    sh "curl -LO [https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl](https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl)"
+                    sh "curl -LO https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
                     sh "chmod +x kubectl"
                     
                     echo 'Rolling out updated manifest to worker architecture...'
