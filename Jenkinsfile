@@ -5,6 +5,10 @@ pipeline {
         timeout(time: 20, unit: 'MINUTES')
     }
 
+    triggers {
+        githubPush()
+    }
+
     agent {
         kubernetes {
             yaml '''
