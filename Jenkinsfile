@@ -1,4 +1,10 @@
 pipeline {
+    options {
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+        timeout(time: 20, unit: 'MINUTES')
+    }
+
     agent {
         kubernetes {
             yaml '''
@@ -19,13 +25,13 @@ spec:
     environment {
         DOCKER_HUB_USER = 'sivaanumula'  
         IMAGE_NAME      = 'agronet-ingestion'
-        IMAGE_TAG       = 'v1'
+        IMAGE_TAG       = "v${BUILD_NUMBER}"
     }
 
     stages {
         stage('Checkout Source Code') {
             steps {
-                echo 'Pulling latest code changes from Git repository...'
+                checkout scm
             }
         }
 
@@ -35,20 +41,25 @@ spec:
                     dir('ingestion-service') {
                         echo 'Building and Pushing image securely using Kaniko...'
                         withCredentials([usernamePassword(credentialsId: 'docker-hub-vault-token', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
-                            sh """
+                            sh '''
+                            set +x
                             mkdir -p /kaniko/.docker
                             cat <<EOF > /kaniko/.docker/config.json
                             {
                               "auths": {
-                                                                "https://index.docker.io/v1/": {
-                                  "username": "${DH_USER}",
-                                  "password": "${DH_PASS}"
+                                "https://index.docker.io/v1/": {
+                                  "username": "$DH_USER",
+                                  "password": "$DH_PASS"
                                 }
                               }
                             }
                             EOF
-                            /kaniko/executor --context=. --dockerfile=Dockerfile --destination=${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}
-                            """
+                            /kaniko/executor \
+                              --context=. \
+                              --dockerfile=Dockerfile \
+                              --destination="$DOCKER_HUB_USER/$IMAGE_NAME:$IMAGE_TAG" \
+                              --destination="$DOCKER_HUB_USER/$IMAGE_NAME:latest"
+                            '''
                         }
                     }
                 }
@@ -59,14 +70,23 @@ spec:
             steps {
                 dir('ingestion-service') {
                     echo 'Downloading kubectl utility dynamically...'
-                    sh "curl -LO https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
-                    sh "chmod +x kubectl"
-                    
+                    sh 'curl --fail --location --output kubectl https://dl.k8s.io/release/v1.35.5/bin/linux/amd64/kubectl'
+                    sh 'chmod +x kubectl'
+
                     echo 'Rolling out updated manifest to worker architecture...'
-                    sh "./kubectl apply -f agronet-app.yaml"
-                    sh "./kubectl rollout restart deployment/agronet-api"
+                    sh '''
+                    sed -i "s#image: sivaanumula/agronet-ingestion:.*#image: $DOCKER_HUB_USER/$IMAGE_NAME:$IMAGE_TAG#" agronet-app.yaml
+                    ./kubectl apply --namespace jenkins -f agronet-app.yaml
+                    ./kubectl rollout status --namespace jenkins deployment/agronet-api --timeout=5m
+                    '''
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo "AgroNet pipeline result: ${currentBuild.currentResult}"
         }
     }
 }

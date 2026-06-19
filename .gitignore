@@ -1,3 +1,10 @@
+DEVOPS.pem
+*.pem
+*.tar
+__pycache__/
+*.py[cod]
 .terraform/
 terraform/
 .ingestion-api/
+*.tfstate
+*.tfstate.*
