@@ -428,10 +428,10 @@ def metrics():
     uptime = int(time.time() - START_TIME)
     return f"""# HELP agronet_api_up AgroNet API health status
 # TYPE agronet_api_up gauge
-# agronet_api_up 1
+agronet_api_up 1
 # HELP agronet_api_uptime_seconds AgroNet API uptime in seconds
 # TYPE agronet_api_uptime_seconds counter
-# agronet_api_uptime_seconds {uptime}
+agronet_api_uptime_seconds {uptime}
 """
 
 @app.get("/api/v1/telemetry/recent", response_model=List[dict])
@@ -444,7 +444,7 @@ async def receive_telemetry(data: SensorTelemetry):
         raise HTTPException(status_code=400, detail="Invalid device_id profile")
     
     # Store event details locally for live dashboard streaming
-    event_details = {{}}
+    event_details = {}
     if data.soil_moisture is not None:
         event_details["soil_moisture"] = data.soil_moisture
     if data.temperature is not None:
