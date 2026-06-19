@@ -5,23 +5,28 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
+  initContainers:
+  - name: socket-permissions
+    image: busybox:latest
+    command: ["sh", "-c", "chmod 666 /var/run/docker.sock"]
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-sock
   containers:
   - name: jnlp
     image: jenkins/inbound-agent:3355.v388858a_47b_33-22
     volumeMounts:
     - mountPath: /var/run/docker.sock
       name: docker-sock
-  - name: docker-cli
-    image: docker:24.0.7-dind
-    command: ["cat"]
-    tty: true
-    volumeMounts:
-    - mountPath: /var/run/docker.sock
-      name: docker-sock
+    - mountPath: /usr/bin/docker
+      name: docker-cli
   volumes:
   - name: docker-sock
     hostPath:
       path: /var/run/docker.sock
+  - name: docker-cli
+    hostPath:
+      path: /usr/bin/docker
 '''
         }
     }
@@ -41,26 +46,22 @@ spec:
 
         stage('Build Docker Image') {
             steps {
-                container('docker-cli') {
-                    dir('ingestion-service') {
-                        echo 'Building production-grade container image using native container environment...'
-                        sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
-                    }
+                dir('ingestion-service') {
+                    echo 'Building production-grade slim container image...'
+                    sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
 
         stage('Push to Docker Hub Registry') {
             steps {
-                container('docker-cli') {
-                    dir('ingestion-service') {
-                        echo 'Loading credentials securely...'
-                        withCredentials([usernamePassword(credentialsId: 'docker-hub-vault-token', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
-                            echo 'Authenticating with Docker Hub...'
-                            sh "docker login -u ${DH_USER} -p ${DH_PASS}"
-                            echo 'Syncing image with centralized registry pool...'
-                            sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
-                        }
+                dir('ingestion-service') {
+                    echo 'Loading credentials securely...'
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-vault-token', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
+                        echo 'Authenticating with Docker Hub...'
+                        sh "docker login -u ${DH_USER} -p ${DH_PASS}"
+                        echo 'Syncing image with centralized registry pool...'
+                        sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
                     }
                 }
             }
