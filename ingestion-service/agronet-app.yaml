@@ -17,7 +17,7 @@ spec:
       containers:
       - name: api-container
         image: agronet-ingestion:v1
-        imagePullPolicy: Never
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000
         resources:
