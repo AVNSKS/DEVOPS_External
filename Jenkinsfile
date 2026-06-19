@@ -39,23 +39,29 @@ spec:
 
         stage('Build Docker Image') {
             steps {
-                echo 'Building production-grade slim container image...'
-                sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                dir('ingestion-service') {
+                    echo 'Building production-grade slim container image...'
+                    sh "docker build -t ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
             }
         }
 
         stage('Push to Docker Hub Registry') {
             steps {
-                echo 'Syncing image with centralized registry pool...'
-                sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                dir('ingestion-service') {
+                    echo 'Syncing image with centralized registry pool...'
+                    sh "docker push ${DOCKER_HUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                }
             }
         }
 
         stage('Deploy to K3s Cluster') {
             steps {
-                echo 'Rolling out updated manifest to worker architecture...'
-                sh "kubectl apply -f agronet-app.yaml"
-                sh "kubectl rollout restart deployment/agronet-api"
+                dir('ingestion-service') {
+                    echo 'Rolling out updated manifest to worker architecture...'
+                    sh "kubectl apply -f agronet-app.yaml"
+                    sh "kubectl rollout restart deployment/agronet-api"
+                }
             }
         }
     }
