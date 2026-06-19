@@ -20,7 +20,17 @@ spec:
     metadata:
       labels:
         app: agronet
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "agronet-role"
+        vault.hashicorp.com/agent-inject-secret-database: "secret/data/agronet"
+        vault.hashicorp.com/agent-inject-template-database: |
+          {{- with secret "secret/data/agronet" -}}
+          db_password={{ .Data.data.db_password }}
+          api_key={{ .Data.data.api_key }}
+          {{- end -}}
     spec:
+      serviceAccountName: agronet-sa
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001

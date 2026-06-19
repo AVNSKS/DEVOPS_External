@@ -49,15 +49,15 @@ spec:
                             set +x
                             mkdir -p /kaniko/.docker
                             cat <<EOF > /kaniko/.docker/config.json
-                            {
-                              "auths": {
-                                "https://index.docker.io/v1/": {
-                                  "username": "$DH_USER",
-                                  "password": "$DH_PASS"
-                                }
-                              }
-                            }
-                            EOF
+{
+  "auths": {
+    "https://index.docker.io/v1/": {
+      "username": "$DH_USER",
+      "password": "$DH_PASS"
+    }
+  }
+}
+EOF
                             /kaniko/executor \
                               --context=. \
                               --dockerfile=Dockerfile \
