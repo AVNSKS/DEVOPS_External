@@ -5,6 +5,13 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
+  initContainers:
+  - name: socket-permissions
+    image: busybox:latest
+    command: ["sh", "-c", "chmod 666 /var/run/docker.sock"]
+    volumeMounts:
+    - mountPath: /var/run/docker.sock
+      name: docker-sock
   containers:
   - name: jnlp
     image: jenkins/inbound-agent:3355.v388858a_47b_33-22
