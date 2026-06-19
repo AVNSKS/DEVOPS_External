@@ -32,7 +32,7 @@ spec:
     }
 
     environment {
-        DOCKER_HUB_USER = 'sivaanumula'
+        DOCKER_HUB_USER = 'sivaanumula'  
         IMAGE_NAME      = 'agronet-ingestion'
         IMAGE_TAG       = 'v1'
     }
@@ -70,9 +70,13 @@ spec:
         stage('Deploy to K3s Cluster') {
             steps {
                 dir('ingestion-service') {
+                    echo 'Downloading kubectl utility dynamically...'
+                    sh "curl -LO https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
+                    sh "chmod +x kubectl"
+                    
                     echo 'Rolling out updated manifest to worker architecture...'
-                    sh "kubectl apply -f agronet-app.yaml"
-                    sh "kubectl rollout restart deployment/agronet-api"
+                    sh "./kubectl apply -f agronet-app.yaml"
+                    sh "./kubectl rollout restart deployment/agronet-api"
                 }
             }
         }
