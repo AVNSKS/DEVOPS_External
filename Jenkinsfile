@@ -8,10 +8,12 @@ spec:
   initContainers:
   - name: socket-permissions
     image: busybox:latest
-    command: ["sh", "-c", "chmod 666 /var/run/docker.sock"]
+    command: ["sh", "-c", "chmod 666 /var/run/docker.sock && chmod +x /usr/bin/docker"]
     volumeMounts:
     - mountPath: /var/run/docker.sock
       name: docker-sock
+    - mountPath: /usr/bin/docker
+      name: docker-cli
   containers:
   - name: jnlp
     image: jenkins/inbound-agent:3355.v388858a_47b_33-22
