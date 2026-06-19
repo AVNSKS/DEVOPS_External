@@ -5,6 +5,9 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
+  securityContext:
+    runAsUser: 0
+    fsGroup: 0
   initContainers:
   - name: socket-permissions
     image: busybox:latest
